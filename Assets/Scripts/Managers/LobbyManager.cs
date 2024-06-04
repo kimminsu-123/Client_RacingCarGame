@@ -48,7 +48,7 @@ public class LobbyManager : SingletonMonobehavior<LobbyManager>
             LeaveLobby(null, true);
         }
 
-        return hasLobby;
+        return !hasLobby;
     }
 
     private IEnumerator HeartbeatLobbyCoroutine()
