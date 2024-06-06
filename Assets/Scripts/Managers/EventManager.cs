@@ -5,7 +5,11 @@ public enum EventType
 {
     OnEnterLobby,
     OnLeaveLobby,
-    OnApplicationWantsToQuit
+    
+    OnPlayerJoined,
+    OnPlayerLeaved,
+    
+    OnApplicationWantsToQuit,
 }
 
 public class EventManager : SingletonMonobehavior<EventManager>

@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using Unity.Services.Authentication;
 using Unity.Services.Core;
@@ -66,38 +67,26 @@ public class LobbyManager : SingletonMonobehavior<LobbyManager>
     {
         LobbyEventCallbacks callbacks = new LobbyEventCallbacks();
 
-        callbacks.PlayerDataAdded += OnPlayerDataAdded;
-        callbacks.PlayerDataChanged += OnPlayerDataChanged;
-        callbacks.PlayerDataRemoved += OnPlayerDataRemoved;
+        callbacks.LobbyChanged += OnLobbyChanged;
         callbacks.PlayerJoined += OnPlayerJoined;
         callbacks.PlayerLeft += OnPlayerLeft;
-
+        
         await LobbyService.Instance.SubscribeToLobbyEventsAsync(CurrentLobby.Id, callbacks);
     }
 
-    private void OnPlayerDataAdded(Dictionary<int, Dictionary<string, ChangedOrRemovedLobbyValue<PlayerDataObject>>> players)
+    private void OnLobbyChanged(ILobbyChanges obj)
     {
-        Debug.Log($"Added {string.Join(", ", players.Select(x => x.Key))}");
-    }
-
-    private void OnPlayerDataChanged(Dictionary<int, Dictionary<string, ChangedOrRemovedLobbyValue<PlayerDataObject>>> players)
-    {
-        Debug.Log($"Changed {string.Join(", ", players.Select(x => x.Key))}");
-    }
-
-    private void OnPlayerDataRemoved(Dictionary<int, Dictionary<string, ChangedOrRemovedLobbyValue<PlayerDataObject>>> players)
-    {
-        Debug.Log($"Removed {string.Join(", ", players.Select(x => x.Key))}");
+        obj.ApplyToLobby(CurrentLobby);
     }
 
     private void OnPlayerJoined(List<LobbyPlayerJoined> others)
     {
-        Debug.Log($"Joined {string.Join(", ", others.Select(x => x.PlayerIndex))}");
+        EventManager.Instance.PostNotification(EventType.OnPlayerJoined, this, others);
     }
 
     private void OnPlayerLeft(List<int> others)
     {
-        Debug.Log($"Left {string.Join(", ", others)}");
+        EventManager.Instance.PostNotification(EventType.OnPlayerJoined, this, others);
     }
 
     public async void Initialize(Action<LobbyCallbackToken> callback)
