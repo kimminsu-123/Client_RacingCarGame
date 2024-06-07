@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -16,7 +17,12 @@ public class LobbyPlayerElement : MonoBehaviour
     public bool isLocal;
     public PlayerStatusType status;
     
-    public void OnEnable()
+    private void OnEnable()
+    {
+        ApplyUpdated();
+    }
+
+    public void ApplyUpdated()
     {
         switch (status)
         {

@@ -35,6 +35,7 @@ public class LobbyManager : SingletonMonobehavior<LobbyManager>
     public readonly string ChangeStatusName = "R";
     
     public bool InLobby => CurrentLobby != null;
+    public bool IsAllReady => CurrentLobby != null && CurrentLobby.Players.All(x => x.Data[ChangeStatusName].Value.Equals("1"));
     public bool Initialized { get; private set; }
     public Lobby CurrentLobby { get; private set; }
 
@@ -113,16 +114,13 @@ public class LobbyManager : SingletonMonobehavior<LobbyManager>
             var playerChanges = playerData.Value;
             foreach (var playerChange in playerChanges)
             {
-                var changedValue = playerChange.Value;
-                var playerDataObject = changedValue.Value;
-
                 switch (playerChange.Key)
                 {
                     case "C":
-                        EventManager.Instance.PostNotification(EventType.OnPlayerColorChanged, this, player, playerDataObject.Value);
+                        EventManager.Instance.PostNotification(EventType.OnPlayerColorChanged, this);
                         break;
                     case "R":
-                        EventManager.Instance.PostNotification(EventType.OnPlayerStatusChanged, this, player, playerDataObject.Value);
+                        EventManager.Instance.PostNotification(EventType.OnPlayerStatusChanged, this);
                         break;
                 }
             }
@@ -313,5 +311,8 @@ public class LobbyManager : SingletonMonobehavior<LobbyManager>
         };
         
         CurrentLobby = await LobbyService.Instance.UpdatePlayerAsync(CurrentLobby.Id, localPlayerId, updateOptions);
+        
+        EventManager.Instance.PostNotification(EventType.OnPlayerColorChanged, this);
+        EventManager.Instance.PostNotification(EventType.OnPlayerStatusChanged, this);
     }
 }

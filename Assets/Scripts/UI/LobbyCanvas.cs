@@ -37,17 +37,11 @@ public class LobbyCanvas : MonoBehaviour
     {
         carPreviewImage.color = button.color;
 
-        var element = playerElements.FirstOrDefault(x => x.isLocal);
-        if (element != null)
-        {
-            element.carColorImg.color = button.color;
-        }
-
         foreach (var b in paletteColorButtons)
         {
             b.ApplyInteractInterval();
         }
-        
+
         int index = paletteColorButtons.ToList().IndexOf(button);
 
         Dictionary<string, string> option = new Dictionary<string, string>
@@ -61,6 +55,18 @@ public class LobbyCanvas : MonoBehaviour
     public void LeaveLobby()
     {
         LobbyManager.Instance.LeaveLobby(OnLeaveLobby);
+    }
+
+    public void ReadyPlayer(bool flag)
+    {
+        PlayerStatusType type = flag ? PlayerStatusType.Ready : PlayerStatusType.UnReady;
+
+        Dictionary<string, string> options = new Dictionary<string, string>()
+        {
+            { LobbyManager.Instance.ChangeStatusName, $"{(int)type}" }
+        };
+
+        LobbyManager.Instance.UpdatePlayerData(options);
     }
 
     private void OnLeaveLobby(LobbyCallbackToken token)
@@ -102,7 +108,7 @@ public class LobbyCanvas : MonoBehaviour
     {
         var colorIndex = int.Parse(curPlayer.Data[LobbyManager.Instance.ChangeColorName].Value);
         var statusFlag = curPlayer.Data[LobbyManager.Instance.ChangeStatusName].Value;
-        
+
         playerElements[lastIndex].carColorImg.color = paletteColorButtons[colorIndex].color;
         playerElements[lastIndex].isLocal = curPlayer.Id.Equals(localPlayer.Id);
         playerElements[lastIndex].status = (PlayerStatusType)int.Parse(statusFlag);
