@@ -92,3 +92,4 @@ MonoBehaviour:
   onClickColor:
     m_PersistentCalls:
       m_Calls: []
+  interactive: 1

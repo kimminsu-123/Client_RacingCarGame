@@ -299,5 +299,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a887c7cd4f3d41f5ab5f8b8c73bb021a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  localColor: {r: 0.85882354, g: 0.9647059, b: 0.99215686, a: 1}
+  remoteColor: {r: 1, g: 0.8235294, b: 0.8156863, a: 1}
+  readyColor: {r: 0.80878216, g: 1, b: 0.8066038, a: 1}
   playerIdText: {fileID: 6620516938747737373}
   carColorImg: {fileID: 9187418685067016960}
+  bgImage: {fileID: 1362939605367018605}
+  isLocal: 0
+  status: 0

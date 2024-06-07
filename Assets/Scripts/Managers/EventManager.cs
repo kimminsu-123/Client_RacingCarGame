@@ -8,6 +8,8 @@ public enum EventType
     
     OnPlayerJoined,
     OnPlayerLeaved,
+    OnPlayerStatusChanged,
+    OnPlayerColorChanged,
     
     OnApplicationWantsToQuit,
 }
