@@ -35,6 +35,14 @@ public class LobbyCanvas : MonoBehaviour
 
     private void OnChangedColor(PaletteColorButton button)
     {
+        carPreviewImage.color = button.color;
+
+        var element = playerElements.FirstOrDefault(x => x.isLocal);
+        if (element != null)
+        {
+            element.carColorImg.color = button.color;
+        }
+
         foreach (var b in paletteColorButtons)
         {
             b.ApplyInteractInterval();
@@ -93,12 +101,10 @@ public class LobbyCanvas : MonoBehaviour
     private void ConfigurePlayerElement(int lastIndex, Player curPlayer, Player localPlayer)
     {
         var colorIndex = int.Parse(curPlayer.Data[LobbyManager.Instance.ChangeColorName].Value);
-        var statusFlag = curPlayer.Data[LobbyManager.Instance.ChangeColorName].Value;
+        var statusFlag = curPlayer.Data[LobbyManager.Instance.ChangeStatusName].Value;
         
-        carPreviewImage.color = paletteColorButtons[colorIndex].color;
-
-        playerElements[lastIndex].isLocal = curPlayer.Id.Equals(localPlayer.Id);
         playerElements[lastIndex].carColorImg.color = paletteColorButtons[colorIndex].color;
+        playerElements[lastIndex].isLocal = curPlayer.Id.Equals(localPlayer.Id);
         playerElements[lastIndex].status = (PlayerStatusType)int.Parse(statusFlag);
         playerElements[lastIndex].playerIdText.text = curPlayer.Id;
         playerElements[lastIndex].gameObject.SetActive(true);
