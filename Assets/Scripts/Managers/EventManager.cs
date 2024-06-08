@@ -11,6 +11,10 @@ public enum EventType
     OnPlayerStatusChanged,
     OnPlayerColorChanged,
     
+    OnBeginningGame,
+    OnEndingGame,
+    OnEndGame,
+    
     OnApplicationWantsToQuit,
 }
 

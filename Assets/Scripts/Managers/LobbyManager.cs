@@ -2,11 +2,14 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using Unity.Services.Authentication;
 using Unity.Services.Core;
 using Unity.Services.Lobbies;
 using Unity.Services.Lobbies.Models;
+using Unity.VisualScripting;
 using UnityEngine;
+using UnityEngine.SubsystemsImplementation;
 using Task = System.Threading.Tasks.Task;
 
 public enum CallbackType
@@ -16,10 +19,13 @@ public enum CallbackType
     Success
 }
 
-public enum PlayerStatusType
+public enum PlayerStatus
 {
     UnReady = 0,
     Ready,
+    
+    Connecting = 10,
+    Connected
 }
 
 public class LobbyCallbackToken
@@ -32,16 +38,18 @@ public class LobbyCallbackToken
 public class LobbyManager : SingletonMonobehavior<LobbyManager>
 {
     public readonly string ChangeColorName = "C";
-    public readonly string ChangeStatusName = "R";
+    public readonly string ChangeStatusName = "S";
     
     public bool InLobby => CurrentLobby != null;
-    public bool IsAllReady => CurrentLobby != null && CurrentLobby.Players.All(x => x.Data[ChangeStatusName].Value.Equals("1"));
+    public bool IsAllReady => InLobby && CurrentLobby.Players.All(x => !x.Data[ChangeStatusName].Value.Equals(((int)PlayerStatus.UnReady).ToString()));
     public bool Initialized { get; private set; }
     public Lobby CurrentLobby { get; private set; }
 
     public float heartbeatInterval = 3f;
     
     private const int MaxPlayer = 4;
+    private const bool IsPrivate = false;
+    private const bool IsLocked = false;
     private const string Environment = "development";
     
     private readonly PlayerDataObject _colorObject = new(PlayerDataObject.VisibilityOptions.Member, "0");
@@ -49,7 +57,31 @@ public class LobbyManager : SingletonMonobehavior<LobbyManager>
     
     private void Start()
     {
+        EventManager.Instance.AddListener(EventType.OnBeginningGame, OnBeginningGame);
+        EventManager.Instance.AddListener(EventType.OnEndingGame, OnEndingGame);
+        
         Application.wantsToQuit += OnApplicationWantsToQuit;
+    }
+    
+    private void OnBeginningGame(EventType type, Component sender, object[] args)
+    {
+        if (CurrentLobby.HostId.Equals(PlayerManager.Instance.LocalPlayer.Id))
+        {
+            UpdateLobbyData(null, null, true);
+        }
+    }
+    
+    private void OnEndingGame(EventType type, Component sender, object[] args)
+    {
+        if (CurrentLobby.HostId.Equals(PlayerManager.Instance.LocalPlayer.Id))
+        {
+            UpdateLobbyData(null, OnUnlockedLobby);
+        }
+    }
+
+    private void OnUnlockedLobby(LobbyCallbackToken token)
+    {
+        EventManager.Instance.PostNotification(EventType.OnEndGame, this);
     }
 
     private bool OnApplicationWantsToQuit()
@@ -114,14 +146,13 @@ public class LobbyManager : SingletonMonobehavior<LobbyManager>
             var playerChanges = playerData.Value;
             foreach (var playerChange in playerChanges)
             {
-                switch (playerChange.Key)
+                if (playerChange.Key.Equals(ChangeColorName))
                 {
-                    case "C":
-                        EventManager.Instance.PostNotification(EventType.OnPlayerColorChanged, this);
-                        break;
-                    case "R":
-                        EventManager.Instance.PostNotification(EventType.OnPlayerStatusChanged, this);
-                        break;
+                    EventManager.Instance.PostNotification(EventType.OnPlayerColorChanged, this);
+                }
+                else if (playerChange.Key.Equals(ChangeStatusName))
+                {
+                    EventManager.Instance.PostNotification(EventType.OnPlayerStatusChanged, this);
                 }
             }
         }
@@ -175,7 +206,8 @@ public class LobbyManager : SingletonMonobehavior<LobbyManager>
         
         CreateLobbyOptions options = new CreateLobbyOptions
         {
-            IsPrivate = false,
+            IsLocked = IsLocked,
+            IsPrivate = IsPrivate,
             Player = new Player(id: AuthenticationService.Instance.PlayerId, data: data)
         };
 
@@ -287,32 +319,104 @@ public class LobbyManager : SingletonMonobehavior<LobbyManager>
         }
     }
 
-    public async void UpdatePlayerData(Dictionary<string, string> options)
+    public async void UpdateLobbyData(Dictionary<string, string> options, Action<LobbyCallbackToken> callback, 
+        bool isLocked = IsLocked, int maxPlayer = MaxPlayer, bool isPrivate = IsPrivate)
     {
-        if (!InLobby) return;
-        
-        string localPlayerId = PlayerManager.Instance.LocalPlayer.Id;
-        Dictionary<string, PlayerDataObject> dataCurr = new Dictionary<string, PlayerDataObject>();
-        
-        foreach (var dataNew in options)
+        LobbyCallbackToken result = new LobbyCallbackToken();
+        result.Lobby = CurrentLobby;
+
+        if (!InLobby)
         {
-            PlayerDataObject dataObj = new PlayerDataObject(PlayerDataObject.VisibilityOptions.Member, dataNew.Value);
-            if (dataCurr.ContainsKey(dataNew.Key))
-                dataCurr[dataNew.Key] = dataObj;
-            else
-                dataCurr.Add(dataNew.Key, dataObj);
+            result.Type = CallbackType.Failed;
+            result.Msg = "you not in lobby";
+            callback?.Invoke(result);
+            return;
         }
 
-        UpdatePlayerOptions updateOptions = new UpdatePlayerOptions
+        try
         {
-            Data = dataCurr,
-            AllocationId = null,
-            ConnectionInfo = null
-        };
-        
-        CurrentLobby = await LobbyService.Instance.UpdatePlayerAsync(CurrentLobby.Id, localPlayerId, updateOptions);
-        
-        EventManager.Instance.PostNotification(EventType.OnPlayerColorChanged, this);
-        EventManager.Instance.PostNotification(EventType.OnPlayerStatusChanged, this);
+            string localPlayerId = PlayerManager.Instance.LocalPlayer.Id;
+            Dictionary<string, DataObject> dataCurr = new Dictionary<string, DataObject>();
+
+            foreach (var dataNew in options)
+            {
+                DataObject dataObj = new DataObject(DataObject.VisibilityOptions.Member, dataNew.Value);
+                if (dataCurr.ContainsKey(dataNew.Key))
+                    dataCurr[dataNew.Key] = dataObj;
+                else
+                    dataCurr.Add(dataNew.Key, dataObj);
+            }
+
+            UpdateLobbyOptions updateOptions = new UpdateLobbyOptions
+            {
+                MaxPlayers = maxPlayer,
+                IsPrivate = isPrivate,
+                IsLocked = isLocked,
+                Data = dataCurr,
+            };
+
+            CurrentLobby = await LobbyService.Instance.UpdateLobbyAsync(CurrentLobby.Id, updateOptions);
+            
+            result.Type = CallbackType.Success;
+        }
+        catch (Exception err)
+        {
+            result.Type = CallbackType.Failed;
+            result.Msg = err.Message;
+        }
+        finally
+        {
+            callback?.Invoke(result);
+        }
+    }
+    
+    public async void UpdatePlayerData(Dictionary<string, string> options, Action<LobbyCallbackToken> callback)
+    {
+        LobbyCallbackToken result = new LobbyCallbackToken();
+        result.Lobby = CurrentLobby;
+
+        if (!InLobby)
+        {
+            result.Type = CallbackType.Failed;
+            result.Msg = "you not in lobby";
+            callback?.Invoke(result);
+            return;
+        }
+
+        try
+        {
+            string localPlayerId = PlayerManager.Instance.LocalPlayer.Id;
+            Dictionary<string, PlayerDataObject> dataCurr = new Dictionary<string, PlayerDataObject>();
+
+            foreach (var dataNew in options)
+            {
+                PlayerDataObject dataObj =
+                    new PlayerDataObject(PlayerDataObject.VisibilityOptions.Member, dataNew.Value);
+                if (dataCurr.ContainsKey(dataNew.Key))
+                    dataCurr[dataNew.Key] = dataObj;
+                else
+                    dataCurr.Add(dataNew.Key, dataObj);
+            }
+
+            UpdatePlayerOptions updateOptions = new UpdatePlayerOptions
+            {
+                Data = dataCurr,
+                AllocationId = null,
+                ConnectionInfo = null
+            };
+
+            CurrentLobby = await LobbyService.Instance.UpdatePlayerAsync(CurrentLobby.Id, localPlayerId, updateOptions);
+            
+            result.Type = CallbackType.Success;
+        }
+        catch (Exception err)
+        {
+            result.Type = CallbackType.Failed;
+            result.Msg = err.Message;
+        }
+        finally
+        {
+            callback?.Invoke(result);
+        }
     }
 }

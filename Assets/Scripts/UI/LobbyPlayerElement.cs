@@ -15,7 +15,7 @@ public class LobbyPlayerElement : MonoBehaviour
     public Image bgImage;
 
     public bool isLocal;
-    public PlayerStatusType status;
+    public PlayerStatus status;
     
     private void OnEnable()
     {
@@ -26,10 +26,10 @@ public class LobbyPlayerElement : MonoBehaviour
     {
         switch (status)
         {
-            case PlayerStatusType.Ready:
+            case PlayerStatus.Ready:
                 bgImage.color = readyColor;
                 break;
-            case PlayerStatusType.UnReady:
+            case PlayerStatus.UnReady:
                 bgImage.color = isLocal ? localColor : remoteColor;
                 break;
         }

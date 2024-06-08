@@ -23,16 +23,7 @@ public class PlayerManager : SingletonMonobehavior<PlayerManager>
         {
             return;
         }
-        
-        GameManager.Instance.lobbyCanvas.gameObject.SetActive(false);
-        UIManager.Instance.ShowLoading();
-        
-        // 만약 모든 플레이어가 준비 완료이면
-            // Lobby UI 끄기
-            // Loading UI 켜기
-            // 서버랑 연결하기
-            // 로비 옵션에 ConnectedServer 옵션을 True 로 바꾸기
-            // 만약 모든 플레이어가 True가 되면 게임 시작하기
-                // 타이머 시작
+
+        EventManager.Instance.PostNotification(EventType.OnBeginningGame, this);
     }
 }
