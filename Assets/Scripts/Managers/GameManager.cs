@@ -6,6 +6,7 @@ public class GameManager : SingletonMonobehavior<GameManager>
 {
     public MainCanvas mainCanvas;
     public LobbyCanvas lobbyCanvas;
+    public GameObject inGameGroup;
 
     private void Start()
     {
@@ -19,18 +20,23 @@ public class GameManager : SingletonMonobehavior<GameManager>
     {
         lobbyCanvas.gameObject.SetActive(true);
         mainCanvas.gameObject.SetActive(false);
+        inGameGroup.SetActive(false);
     }
 
     private void OnLeaveLobby(EventType type, Component sender, object[] args)
     {
         lobbyCanvas.gameObject.SetActive(false);
         mainCanvas.gameObject.SetActive(true);
+        inGameGroup.SetActive(false);
     }
 
     private void OnBeginningGame(EventType type, Component sender, object[] args)
     {
         mainCanvas.gameObject.SetActive(false);
         lobbyCanvas.gameObject.SetActive(false);
+        
+        inGameGroup.SetActive(true);
+
         UIManager.Instance.ShowLoading();
         
         // 게임 서버와 연결하기
