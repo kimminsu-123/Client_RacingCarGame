@@ -14,6 +14,7 @@ public class GameManager : SingletonMonobehavior<GameManager>
         EventManager.Instance.AddListener(EventType.OnLeaveLobby, OnLeaveLobby);
         EventManager.Instance.AddListener(EventType.OnBeginningGame, OnBeginningGame);
         EventManager.Instance.AddListener(EventType.OnEndGame, OnEndGame);
+        EventManager.Instance.AddListener(EventType.OnFailedNetworkTransfer, OnFailedNetworkTransfer);
     }
 
     private void OnEnterLobby(EventType type, Component sender, object[] args)
@@ -46,9 +47,11 @@ public class GameManager : SingletonMonobehavior<GameManager>
     {
         OnEnterLobby(type, sender, args);
     }
-
-    private void OnApplicationQuit()
+    
+    private void OnFailedNetworkTransfer(EventType type, Component sender, object[] args)
     {
-        EventManager.Instance.PostNotification(EventType.OnApplicationWantsToQuit, this);
+        string msg = args[0] as string;
+        
+        UIManager.Instance.Alert("Network Error", msg);
     }
 }

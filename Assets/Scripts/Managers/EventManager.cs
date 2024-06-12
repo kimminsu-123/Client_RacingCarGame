@@ -15,7 +15,7 @@ public enum EventType
     OnEndingGame,
     OnEndGame,
     
-    OnApplicationWantsToQuit,
+    OnFailedNetworkTransfer,
 }
 
 public class EventManager : SingletonMonobehavior<EventManager>
