@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Unity.Services.Lobbies.Models;
 using UnityEngine;
 
@@ -39,8 +40,25 @@ public class GameManager : SingletonMonobehavior<GameManager>
         inGameGroup.SetActive(true);
 
         UIManager.Instance.ShowLoading();
+
+        ConnectionData data = new ConnectionData();
+        data.PlayerId = PlayerManager.Instance.LocalPlayer.Id;
+        data.SessionId = LobbyManager.Instance.CurrentLobby.Id;
+        NetworkManager.Instance.ConnectServer(data);
         
-        // 게임 서버와 연결하기
+        Dictionary<string, string> options = new Dictionary<string, string>()
+        {
+            { LobbyManager.Instance.ChangeStatusName, $"{(int)PlayerStatus.Connecting}" }
+        };
+
+        LobbyManager.Instance.UpdatePlayerData(options, _ =>
+        {
+            EventManager.Instance.PostNotification(EventType.OnPlayerStatusChanged, this);
+        });
+        
+        // 인게임이 로드되면 플레이어 생성
+        // 연결이 되면 Connect로 속성 변경
+        // 모든 플레이어가 Connect가 되면 게임 시작 타이머
     }
 
     private void OnEndGame(EventType type, Component sender, object[] args)

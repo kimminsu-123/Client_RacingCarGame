@@ -42,6 +42,7 @@ public class LobbyManager : SingletonMonobehavior<LobbyManager>
     
     public bool InLobby => CurrentLobby != null;
     public bool IsAllReady => InLobby && CurrentLobby.Players.All(x => !x.Data[ChangeStatusName].Value.Equals(((int)PlayerStatus.UnReady).ToString()));
+    public bool IsAllConnected => InLobby && CurrentLobby.Players.All(x => !x.Data[ChangeStatusName].Value.Equals(((int)PlayerStatus.Connected).ToString()));
     public bool Initialized { get; private set; }
     public Lobby CurrentLobby { get; private set; }
 
