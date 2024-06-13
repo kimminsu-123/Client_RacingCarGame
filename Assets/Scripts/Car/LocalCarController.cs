@@ -23,13 +23,20 @@ public class LocalCarController : CarController
 
     private float _rotationAngle = 0f;
 
+    private FollowCam _cam;
     private Rigidbody2D _cachedRigid2d;
     private PlayerInput _cachedPlayerInput;
 
-    private void Awake()
+    protected override void OnAwake()
     {
+        _cam = FindObjectOfType<FollowCam>(true);
         _cachedRigid2d = GetComponent<Rigidbody2D>();
         _cachedPlayerInput = GetComponent<PlayerInput>();
+    }
+
+    private void Start()
+    {
+        _cam.SetFollower(transform);
     }
 
     private void FixedUpdate()

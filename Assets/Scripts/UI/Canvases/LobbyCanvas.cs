@@ -63,7 +63,7 @@ public class LobbyCanvas : MonoBehaviour
     public void ReadyPlayer(bool flag)
     {
         PlayerStatus status = flag ? PlayerStatus.Ready : PlayerStatus.UnReady;
-
+        
         Dictionary<string, string> options = new Dictionary<string, string>()
         {
             { LobbyManager.Instance.ChangeStatusName, $"{(int)status}" }

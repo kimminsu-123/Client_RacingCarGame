@@ -11,7 +11,8 @@ public enum EventType
     OnPlayerStatusChanged,
     OnPlayerColorChanged,
     
-    OnBeginningGame,
+    OnStartingGame,
+    OnStartGame,
     OnEndingGame,
     OnEndGame,
     

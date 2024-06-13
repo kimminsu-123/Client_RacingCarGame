@@ -13,11 +13,11 @@ public class GameManager : SingletonMonobehavior<GameManager>
     {
         EventManager.Instance.AddListener(EventType.OnEnterLobby, OnEnterLobby);
         EventManager.Instance.AddListener(EventType.OnLeaveLobby, OnLeaveLobby);
-        EventManager.Instance.AddListener(EventType.OnBeginningGame, OnBeginningGame);
+        EventManager.Instance.AddListener(EventType.OnStartingGame, OnBeginningGame);
         EventManager.Instance.AddListener(EventType.OnEndGame, OnEndGame);
         EventManager.Instance.AddListener(EventType.OnFailedNetworkTransfer, OnFailedNetworkTransfer);
     }
-
+    
     private void OnEnterLobby(EventType type, Component sender, object[] args)
     {
         lobbyCanvas.gameObject.SetActive(true);

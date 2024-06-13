@@ -41,8 +41,8 @@ public class LobbyManager : SingletonMonobehavior<LobbyManager>
     public readonly string ChangeStatusName = "S";
     
     public bool InLobby => CurrentLobby != null;
-    public bool IsAllReady => InLobby && CurrentLobby.Players.All(x => !x.Data[ChangeStatusName].Value.Equals(((int)PlayerStatus.UnReady).ToString()));
-    public bool IsAllConnected => InLobby && CurrentLobby.Players.All(x => !x.Data[ChangeStatusName].Value.Equals(((int)PlayerStatus.Connected).ToString()));
+    public bool IsAllReady => InLobby && CurrentLobby.Players.All(x => x.Data[ChangeStatusName].Value.Equals(((int)PlayerStatus.Ready).ToString()));
+    public bool IsAllConnected => InLobby && CurrentLobby.Players.All(x => x.Data[ChangeStatusName].Value.Equals(((int)PlayerStatus.Connected).ToString()));
     public bool Initialized { get; private set; }
     public Lobby CurrentLobby { get; private set; }
 
@@ -58,7 +58,7 @@ public class LobbyManager : SingletonMonobehavior<LobbyManager>
     
     private void Start()
     {
-        EventManager.Instance.AddListener(EventType.OnBeginningGame, OnBeginningGame);
+        EventManager.Instance.AddListener(EventType.OnStartingGame, OnBeginningGame);
         EventManager.Instance.AddListener(EventType.OnEndingGame, OnEndingGame);
         
         Application.wantsToQuit += OnApplicationWantsToQuit;
@@ -134,7 +134,7 @@ public class LobbyManager : SingletonMonobehavior<LobbyManager>
 
     private void OnPlayerLeft(List<int> others)
     {
-        EventManager.Instance.PostNotification(EventType.OnPlayerJoined, this, others);
+        EventManager.Instance.PostNotification(EventType.OnPlayerLeaved, this, others);
     }
 
     private void OnHandlePlayerData(Dictionary<int, Dictionary<string, ChangedOrRemovedLobbyValue<PlayerDataObject>>> data)

@@ -130,31 +130,30 @@ public class Network : IDisposable
     private int _serverPort;
 
     private readonly ConcurrentQueue<PacketInfo> _sendQueue;
-    private ConcurrentDictionary<PacketType, List<OnReceiveEvent>> _receiveListeners;
+    private readonly ConcurrentDictionary<PacketType, List<OnReceiveEvent>> _receiveListeners;
+    private readonly PacketHeaderSerializer _headerSerializer;
+    private readonly List<Thread> _workerThreads;
+    private readonly EndPoint _serverEp;
 
-    private volatile bool _isRunning;
-    private volatile PacketHeaderSerializer _headerSerializer;
-    private volatile List<Thread> _workerThreads;
-    private volatile EndPoint _serverEp;
+    private const int RECEIVE_INTERVAL_MS = 100;
+    private const int SEND_INTERVAL_MS = 100;
+    private const int BUFFER_SIZE = 512;
 
-    private const int ReceiveIntervalMS = 100;
-    private const int SendIntervalMS = 100;
-    private const int BufferSize = 512;
+    private bool _isRunning;
     
     public Network(string ip, int port)
     {
         _socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
-
         _serverIp = ip;
         _serverPort = port;
 
         _sendQueue = new ConcurrentQueue<PacketInfo>();
         _receiveListeners = new ConcurrentDictionary<PacketType, List<OnReceiveEvent>>();
-
-        _isRunning = false;
         _headerSerializer = new PacketHeaderSerializer();
         _workerThreads = new List<Thread>();
         _serverEp = new IPEndPoint(IPAddress.Parse(ip), port);
+
+        _isRunning = false;
     }
 
     public void RegisterReceiveCallback(PacketType type, OnReceiveEvent callback)
@@ -233,7 +232,6 @@ public class Network : IDisposable
     {
         PacketHeader header;
         header.PacketType = type;
-        header.PacketId = 0;
         header.ResultType = ResultType.Success;
         
         PacketInfo packetInfo = new PacketInfo();
@@ -247,7 +245,7 @@ public class Network : IDisposable
     {
         while (_isRunning)
         {
-            Thread.Sleep(SendIntervalMS);
+            Thread.Sleep(SEND_INTERVAL_MS);
 
             if(_sendQueue.IsEmpty) continue;
 
@@ -278,7 +276,10 @@ public class Network : IDisposable
                 receiveArgs.RemoteEndPoint = _serverEp;
                 receiveArgs.Completed += SendCompleted;
 
-                _socket.SendToAsync(receiveArgs);   
+                lock (_socket)
+                {
+                    _socket.SendToAsync(receiveArgs);   
+                }
             }
             catch (Exception err)
             {
@@ -307,14 +308,17 @@ public class Network : IDisposable
         {
             try
             {
-                Thread.Sleep(ReceiveIntervalMS);
+                Thread.Sleep(RECEIVE_INTERVAL_MS);
     
                 SocketAsyncEventArgs receiveArgs = new SocketAsyncEventArgs();
-                receiveArgs.SetBuffer(new byte[BufferSize], 0, BufferSize);
+                receiveArgs.SetBuffer(new byte[BUFFER_SIZE], 0, BUFFER_SIZE);
                 receiveArgs.RemoteEndPoint = new IPEndPoint(IPAddress.None, 0);
                 receiveArgs.Completed += ReceiveCompleted;
 
-                _socket.ReceiveFromAsync(receiveArgs);   
+                lock (_socket)
+                {
+                    _socket.ReceiveFromAsync(receiveArgs);   
+                }
             }
             catch (Exception err)
             {
@@ -331,15 +335,19 @@ public class Network : IDisposable
         PacketHeader header = default;
         byte[] received = new byte[e.BytesTransferred];
         Buffer.BlockCopy(e.Buffer, 0, received, 0, received.Length);
-        bool ret = _headerSerializer.Deserialize(received, ref header);
 
-        if (!ret)
+        lock (_headerSerializer)
         {
-            Dispatcher.Invoke(() =>
+            bool ret = _headerSerializer.Deserialize(received, ref header);
+
+            if (!ret)
             {
-                EventManager.Instance.PostNotification(EventType.OnFailedNetworkTransfer, null, "Failed Packet Header Deserialize");     
-            });
-            return;
+                Dispatcher.Invoke(() =>
+                {
+                    EventManager.Instance.PostNotification(EventType.OnFailedNetworkTransfer, null, "Failed Packet Header Deserialize");     
+                });
+                return;
+            }   
         }
 
         int headerSize = Marshal.SizeOf(typeof(PacketHeader));
