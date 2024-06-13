@@ -41,6 +41,11 @@ public class LocalCarController : CarController
 
     private void FixedUpdate()
     {
+        if (GameManager.Instance.CurrentGameType != GameType.Playing)
+        {
+            return;
+        }
+        
         ApplyEnginForce();
         KillOrthogonalVelocity();
         ApplySteering();

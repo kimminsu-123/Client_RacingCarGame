@@ -49,15 +49,28 @@ public class LobbyCanvas : MonoBehaviour
             { LobbyManager.Instance.ChangeColorName, index.ToString() }
         };
 
-        LobbyManager.Instance.UpdatePlayerData(option, _ =>
+        LobbyManager.Instance.UpdatePlayerData(option, token =>
         {
-            EventManager.Instance.PostNotification(EventType.OnPlayerColorChanged, this);
+            if (token.Type == CallbackType.Success)
+            {
+                EventManager.Instance.PostNotification(EventType.OnPlayerColorChanged, this);
+            }
         });
     }
 
     public void LeaveLobby()
     {
         LobbyManager.Instance.LeaveLobby(OnLeaveLobby);
+    }
+
+    public Color GetColor(int index)
+    {
+        if (index < 0 || paletteColorButtons.Length <= index)
+        {
+            return Color.white;
+        }
+
+        return paletteColorButtons[index].color;
     }
 
     public void ReadyPlayer(bool flag)
@@ -69,9 +82,12 @@ public class LobbyCanvas : MonoBehaviour
             { LobbyManager.Instance.ChangeStatusName, $"{(int)status}" }
         };
 
-        LobbyManager.Instance.UpdatePlayerData(options, _ =>
+        LobbyManager.Instance.UpdatePlayerData(options, token =>
         {
-            EventManager.Instance.PostNotification(EventType.OnPlayerStatusChanged, this);
+            if (token.Type == CallbackType.Success)
+            {
+                EventManager.Instance.PostNotification(EventType.OnPlayerStatusChanged, this);
+            }
         });
     }
     

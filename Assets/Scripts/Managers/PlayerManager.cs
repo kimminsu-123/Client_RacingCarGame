@@ -1,7 +1,5 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Security.Cryptography;
 using Unity.Services.Authentication;
 using Unity.Services.Lobbies.Models;
 using UnityEngine;
@@ -13,7 +11,6 @@ public class PlayerManager : SingletonMonobehavior<PlayerManager>
                                                         .FirstOrDefault(
                                                             p => p.Id.Equals(AuthenticationService.Instance.PlayerId)
                                                         );
-
     private readonly Dictionary<string, CarController> _carControllers = new(); 
 
     private void Start()

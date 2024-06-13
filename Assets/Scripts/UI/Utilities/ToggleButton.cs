@@ -44,7 +44,6 @@ public class ToggleButton : MonoBehaviour
     private void OnEnable()
     {
         Value = value;
-        onValueChanged?.Invoke(Value);
     }
 
     private void Start()

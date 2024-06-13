@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Net;
 using UnityEngine;
 
@@ -12,8 +13,10 @@ public enum PacketType
     Connect,
     Disconnect,
     
+    StartGame,
     SyncTransform,
     GoalLine,
+    EndGame,
 }
 
 public enum ResultType
@@ -103,8 +106,8 @@ public class ConnectionData
     public string SessionId;
     public string PlayerId;
 
-    public const int MaxLenSessionId = 16;
-    public const int MaxLenPlayerId = 16;
+    public const int MaxLenSessionId = 64;
+    public const int MaxLenPlayerId = 64;
 }
 
 public class TransformPacket : IPacket<TransformData>
@@ -132,9 +135,6 @@ public class TransformPacket : IPacket<TransformData>
         {
             bool ret = true;
 
-            Vector3 position = Vector3.zero;
-            Quaternion rotation = Quaternion.identity;
-            
             ret &= SetBuffer(bytes);
             ret &= Deserialize(ref data.Position.x);
             ret &= Deserialize(ref data.Position.y);

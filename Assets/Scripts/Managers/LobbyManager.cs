@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Runtime.CompilerServices;
 using Unity.Services.Authentication;
 using Unity.Services.Core;
 using Unity.Services.Lobbies;
@@ -336,7 +337,6 @@ public class LobbyManager : SingletonMonobehavior<LobbyManager>
 
         try
         {
-            string localPlayerId = PlayerManager.Instance.LocalPlayer.Id;
             Dictionary<string, DataObject> dataCurr = new Dictionary<string, DataObject>();
 
             foreach (var dataNew in options)

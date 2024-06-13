@@ -29,36 +29,40 @@ public class NetworkManager : SingletonMonobehavior<NetworkManager>
         _network = new Network(OperationServerIp, OperationServerPort);
         _network.RegisterReceiveCallback(PacketType.Connect, OnConnect);
         _network.RegisterReceiveCallback(PacketType.Disconnect, OnDisconnect);
+        _network.RegisterReceiveCallback(PacketType.StartGame, OnStartGame);
         _network.RegisterReceiveCallback(PacketType.SyncTransform, OnSyncTransform);
         _network.RegisterReceiveCallback(PacketType.GoalLine, OnGoalLine);
+        _network.RegisterReceiveCallback(PacketType.EndGame, OnEndGame);
         _network.Initialize();
     }
 
     private void OnConnect(PacketInfo info)
     {
-        Debug.Log("On Connected");
-        
-        if (info.Header.ResultType == ResultType.Success)
+        switch (info.Header.ResultType)
         {
-            IsConnected = true;
-        }
-        else
-        {
-            IsConnected = false;
+            case ResultType.Success:
+                IsConnected = true;
+                EventManager.Instance.PostNotification(EventType.OnConnected, this);
+                break;
+            case ResultType.Failed:
+                IsConnected = false;
+                EventManager.Instance.PostNotification(EventType.OnFailedNetworkTransfer, this, "failed connect to server");
+                break;
         }
     }
 
     private void OnDisconnect(PacketInfo info)
     {
-        Debug.Log("On Disconnected");
-
-        if (info.Header.ResultType == ResultType.Success)
+        switch (info.Header.ResultType)
         {
-            IsConnected = false;
-        }
-        else
-        {
-            IsConnected = true;
+            case ResultType.Success:
+                IsConnected = false;
+                EventManager.Instance.PostNotification(EventType.OnDisconnected, this);
+                break;
+            case ResultType.Failed:
+                IsConnected = true;
+                EventManager.Instance.PostNotification(EventType.OnFailedNetworkTransfer, this, "failed disconnect to server");
+                break;
         }
 
         if (_isQuit)
@@ -67,6 +71,19 @@ public class NetworkManager : SingletonMonobehavior<NetworkManager>
         }
     }
 
+    private void OnStartGame(PacketInfo info)
+    {
+        switch (info.Header.ResultType)
+        {
+            case ResultType.Success:
+                EventManager.Instance.PostNotification(EventType.OnStartGame, this);
+                break;
+            case ResultType.Failed:
+                EventManager.Instance.PostNotification(EventType.OnFailedNetworkTransfer, this, "failed start game");
+                break;
+        }
+    }
+    
     private void OnSyncTransform(PacketInfo info)
     {
     }
@@ -74,11 +91,25 @@ public class NetworkManager : SingletonMonobehavior<NetworkManager>
     private void OnGoalLine(PacketInfo info)
     {
     }
-
+    
+    private void OnEndGame(PacketInfo info)
+    {
+        switch (info.Header.ResultType)
+        {
+            case ResultType.Success:
+                EventManager.Instance.PostNotification(EventType.OnEndGame, this);
+                break;
+            case ResultType.Failed:
+                EventManager.Instance.PostNotification(EventType.OnFailedNetworkTransfer, this, "failed end game");
+                break;
+        }
+    }
+    
     private bool OnApplicationWantsToQuit()
     {
         bool isConnected = IsConnected;
-        
+        _isQuit = true;
+
         if (isConnected)
         {
             ConnectionData data = new ConnectionData();
@@ -105,6 +136,13 @@ public class NetworkManager : SingletonMonobehavior<NetworkManager>
         _network.EnqueueSendPacket(PacketType.Disconnect, packet);
     }
 
+    public void SendStartGame(ConnectionData data)
+    {
+        ConnectionPacket packet = new ConnectionPacket(data);
+        
+        _network.EnqueueSendPacket(PacketType.StartGame, packet);
+    }
+
     public void SendTransform(TransformData data)
     {
         TransformPacket packet = new TransformPacket(data);
@@ -119,6 +157,13 @@ public class NetworkManager : SingletonMonobehavior<NetworkManager>
         _network.EnqueueSendPacket(PacketType.GoalLine, packet);
     }
 
+    public void SendEndGame(ConnectionData data)
+    {
+        // 로컬이면서 호스트가 보낸다.
+        ConnectionPacket packet = new ConnectionPacket(data);
+        
+        _network.EnqueueSendPacket(PacketType.EndGame, packet);
+    }
 }
 
 public class Network : IDisposable

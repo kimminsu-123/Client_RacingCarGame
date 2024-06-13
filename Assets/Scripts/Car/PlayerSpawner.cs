@@ -29,6 +29,9 @@ public class PlayerSpawner : MonoBehaviour
         {
             GameObject go;
             Player player = players[index];
+            int selectedColor = int.Parse(player.Data[LobbyManager.Instance.ChangeColorName].Value);
+            Color carColor = GameManager.Instance.lobbyCanvas.GetColor(selectedColor);
+            
             if (player.Id.Equals(localPlayerId))
             {
                 go = Instantiate(localCarPrefab, spawnPos[index].position, spawnPos[index].rotation);
@@ -39,7 +42,7 @@ public class PlayerSpawner : MonoBehaviour
             }
 
             CarController car = go.GetComponent<CarController>();
-            PlayerManager.Instance.AddCar(car, player.Id, Color.white);
+            PlayerManager.Instance.AddCar(car, player.Id, carColor);
 
             _spawnedCars[index] = car;
         }
