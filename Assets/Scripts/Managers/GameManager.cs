@@ -18,6 +18,8 @@ public class GameManager : SingletonMonobehavior<GameManager>
     public LobbyCanvas lobbyCanvas;
     public GameObject inGameGroup;
 
+    public float waitTime;
+
     private void Start()
     {
         EventManager.Instance.AddListener(EventType.OnEnterLobby, OnEnterLobby);
@@ -103,11 +105,12 @@ public class GameManager : SingletonMonobehavior<GameManager>
 
     private void OnStartGame(EventType type, Component sender, object[] args)
     {
-        // 여기서 타이머 재서 시작하는 로직 만들기
-        // UI에 콜백도 같이 넘겨서 콜백으로 이벤트 전달받아서 하기
-        CurrentGameType = GameType.Playing;
-
         UIManager.Instance.HideLoading();
+
+        UIManager.Instance.ShowTimer(waitTime, () =>
+        {
+            CurrentGameType = GameType.Playing;
+        });
     }
 
     private void OnEndingGame(EventType type, Component sender, object[] args)
