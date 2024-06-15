@@ -27,6 +27,7 @@ public class SplineTester : MonoBehaviour
             index++;
         }
         
+        
         index = 0;
         while (index <= 100)
         {
