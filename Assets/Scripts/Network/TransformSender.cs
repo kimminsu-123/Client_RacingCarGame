@@ -8,8 +8,9 @@ using UnityEngine;
 
 public class TransformSender : MonoBehaviour
 {
+    public const float SEND_INTERVAL = 0.1f;
+
     [SerializeField] private Transform _target;
-    [SerializeField] private float _interval = 1f;
     [SerializeField] private bool _isRunning = false;
 
     private float _accumTime = 0f;
@@ -17,11 +18,6 @@ public class TransformSender : MonoBehaviour
     public void SetTarget(Transform target)
     {
         _target = target;
-    }
-
-    public void SetInterval(float interval)
-    {
-        _interval = interval;
     }
 
     public void Run()
@@ -43,7 +39,7 @@ public class TransformSender : MonoBehaviour
         }
 
         _accumTime += Time.deltaTime;
-        if(_accumTime >= _interval)
+        if(_accumTime >= SEND_INTERVAL)
         {
             _accumTime = 0f;
             Send(_target);
