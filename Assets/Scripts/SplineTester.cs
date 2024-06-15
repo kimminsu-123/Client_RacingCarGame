@@ -1,4 +1,6 @@
 using System;
+using System.Linq;
+using MathPlus;
 using UnityEngine;
 
 public class SplineTester : MonoBehaviour
@@ -9,33 +11,23 @@ public class SplineTester : MonoBehaviour
     [ContextMenu("Test")]
     public void Test()
     {
-        CatmullRomSpline spline = new CatmullRomSpline();
+        HermitSpline spline = new HermitSpline();
 
-        lineRenderer.positionCount = 201;
-        foreach (Transform point in points)
+        for(int i = 0; i < points.Length; i++)
         {
-            spline.AddControlPoint(point.position, Vector3.zero, 0f);
+            spline.AddVertex(points[i].position, points[i].up);
         }
 
-        int index = 0;
-        while (index <= 100)
+        lineRenderer.positionCount = points.Length * 100;
+
+        for (int i = 0; i < points.Length - 1; i++)
         {
-            float t = index / 100f + 1;
-            Debug.Log(t);
-            Vector3 pos =  spline.GetPoint(t);
-            lineRenderer.SetPosition(index, pos);
-            index++;
-        }
-        
-        
-        index = 0;
-        while (index <= 100)
-        {
-            float t = index / 100f + 2;
-            Debug.Log(t);
-            Vector3 pos =  spline.GetPoint(t);
-            lineRenderer.SetPosition(index + 100, pos);
-            index++;
+            for(int j = 1; j <= 100; j++)
+            {
+                var pos = spline.Interpolation(100 / j);
+                lineRenderer.SetPosition((j - 1) * (i + 1), pos);
+            }
+            spline.DoNext();
         }
     }
 }

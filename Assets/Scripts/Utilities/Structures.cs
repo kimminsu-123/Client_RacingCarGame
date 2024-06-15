@@ -120,6 +120,8 @@ public class TransformPacket : IPacket<TransformData>
         
             bool ret = true;
 
+            ret &= Serialize(data.SessionId, ConnectionData.MaxLenSessionId);
+            ret &= Serialize(data.PlayerId, ConnectionData.MaxLenPlayerId);
             ret &= Serialize(data.Position.x);
             ret &= Serialize(data.Position.y);
             ret &= Serialize(data.Position.z);
@@ -136,6 +138,8 @@ public class TransformPacket : IPacket<TransformData>
             bool ret = true;
 
             ret &= SetBuffer(bytes);
+            ret &= Deserialize(ref data.SessionId, ConnectionData.MaxLenSessionId);
+            ret &= Deserialize(ref data.PlayerId, ConnectionData.MaxLenPlayerId);
             ret &= Deserialize(ref data.Position.x);
             ret &= Deserialize(ref data.Position.y);
             ret &= Deserialize(ref data.Position.z);
@@ -160,6 +164,7 @@ public class TransformPacket : IPacket<TransformData>
     
     public TransformPacket(byte[] data)
     {
+        _transformData = new TransformData();
         _serializer = new TransformDataSerializer();
         
         _serializer.Deserialize(data, ref _transformData);
@@ -180,6 +185,8 @@ public class TransformPacket : IPacket<TransformData>
 
 public class TransformData
 {
+    public string SessionId;
+    public string PlayerId;
     public Vector3 Position;
     public Quaternion Rotation;
 }

@@ -1,6 +1,54 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+public class Vertex
+{
+    public Vector3 position;
+    public Vector3 velocity;
+}
+
+public class HermitSpline
+{
+    private List<Vertex> vertices;
+
+    public HermitSpline()
+    {
+        vertices = new List<Vertex>();
+    }
+
+    public void AddVertex(Vector3 position, Vector3 velocity)
+    {
+        vertices.Add(new Vertex()
+        {
+            position = position,
+            velocity = velocity
+        });
+    }
+
+    public void DoNext()
+    {
+        vertices.RemoveAt(0);
+    }
+
+    public Vector3 Interpolation(float t)
+    {
+        Vector3 A = vertices[0].position;
+        Vector3 D = vertices[1].position;
+        Vector3 U = vertices[0].velocity;
+        Vector3 V = vertices[1].velocity;
+
+        float t2 = t * t;
+        float t3 = t2 * t;
+
+        float h00 = 2 * t3 - 3 * t2 + 1;
+        float h10 = t3 - 2 * t2 + t;
+        float h01 = -2 * t3 + 3 * t2;
+        float h11 = t3 - t2;
+
+        return h00 * A + h10 * U + h01 * D + h11 * V;
+    }
+}
+
 public class ControlVertex {
     public Vector3 position;
     public Vector3 tangent;

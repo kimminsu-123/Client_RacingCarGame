@@ -86,6 +86,17 @@ public class NetworkManager : SingletonMonobehavior<NetworkManager>
     
     private void OnSyncTransform(PacketInfo info)
     {
+        TransformPacket packet = new TransformPacket(info.Buffer);
+
+        switch (info.Header.ResultType)
+        {
+            case ResultType.Success:
+                EventManager.Instance.PostNotification(EventType.OnSyncPlayer, this, packet.GetData());
+                break;
+            case ResultType.Failed:
+                EventManager.Instance.PostNotification(EventType.OnFailedNetworkTransfer, this, "failed sync transform");
+                break;
+        }
     }
 
     private void OnGoalLine(PacketInfo info)
@@ -147,7 +158,7 @@ public class NetworkManager : SingletonMonobehavior<NetworkManager>
     {
         TransformPacket packet = new TransformPacket(data);
         
-        _network.EnqueueSendPacket(PacketType.GoalLine, packet);
+        _network.EnqueueSendPacket(PacketType.SyncTransform, packet);
     }
 
     public void SendGoal(ConnectionData data)
@@ -159,7 +170,6 @@ public class NetworkManager : SingletonMonobehavior<NetworkManager>
 
     public void SendEndGame(ConnectionData data)
     {
-        // 로컬이면서 호스트가 보낸다.
         ConnectionPacket packet = new ConnectionPacket(data);
         
         _network.EnqueueSendPacket(PacketType.EndGame, packet);

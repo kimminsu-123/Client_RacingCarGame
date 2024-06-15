@@ -15,7 +15,22 @@ public class PlayerManager : SingletonMonobehavior<PlayerManager>
 
     private void Start()
     {
+        EventManager.Instance.AddListener(EventType.OnSyncPlayer, OnSyncPlayer);
         EventManager.Instance.AddListener(EventType.OnPlayerStatusChanged, OnPlayerStatusChanged);
+    }
+
+    private void OnSyncPlayer(EventType type, Component sender, object[] args)
+    {
+        TransformData data = args[0] as TransformData;
+
+        if (_carControllers.ContainsKey(data.PlayerId))
+        {
+            RemoteCarController car = _carControllers[data.PlayerId] as RemoteCarController;
+            if(car != null)
+            {
+                car.AddCoord(data.Position, data.Rotation);
+            }
+        }
     }
 
     private void OnPlayerStatusChanged(EventType type, Component sender, object[] args)

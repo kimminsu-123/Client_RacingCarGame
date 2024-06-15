@@ -22,33 +22,80 @@ public class LocalCarController : CarController
     public float turnFactor = 3.5f;
 
     private float _rotationAngle = 0f;
+    private bool _canMove = false;
 
     private FollowCam _cam;
     private Rigidbody2D _cachedRigid2d;
     private PlayerInput _cachedPlayerInput;
+    private TransformSender _networkCoordSender;
+    
 
     protected override void OnAwake()
     {
         _cam = FindObjectOfType<FollowCam>(true);
         _cachedRigid2d = GetComponent<Rigidbody2D>();
         _cachedPlayerInput = GetComponent<PlayerInput>();
+        _networkCoordSender = GetComponent<TransformSender>();
+    }
+
+    private void OnEnable()
+    {
+        GameManager.Instance.OnChangedGameState += OnChangedGameState;
+    }
+
+    private void OnDisable()
+    {
+        GameManager.Instance.OnChangedGameState -= OnChangedGameState;
+    }
+
+    private void OnChangedGameState(GameStateType type)
+    {
+        switch (type)
+        {
+            case GameStateType.None:
+                break;
+            case GameStateType.Wait:
+                _canMove = false;
+                break;
+            case GameStateType.Playing:
+                _canMove = true;
+                if(LobbyManager.Instance.CurrentLobby.Players.Count > 1)
+                {
+                    _networkCoordSender.Run();
+                }
+                break;
+            case GameStateType.EndPlay:
+                _canMove = false;
+                _networkCoordSender.Stop();
+                break;
+        }
     }
 
     private void Start()
     {
         _cam.SetFollower(transform);
+        _networkCoordSender.SetTarget(transform);
     }
 
     private void FixedUpdate()
     {
-        if (GameManager.Instance.CurrentGameType != GameType.Playing)
+        if (!_canMove)
         {
             return;
         }
-        
+
         ApplyEnginForce();
         KillOrthogonalVelocity();
         ApplySteering();
+
+        if (_cachedRigid2d.velocity != Vector2.zero)
+        {
+            _networkCoordSender.Resume();
+        }
+        else
+        {
+            _networkCoordSender.Pause();
+        }
     }
 
     private void ApplyEnginForce()

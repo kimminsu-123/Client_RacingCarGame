@@ -1,8 +1,9 @@
+using System;
 using System.Collections.Generic;
 using Unity.Services.Lobbies.Models;
 using UnityEngine;
 
-public enum GameType
+public enum GameStateType
 {
     None,
     Wait,
@@ -12,7 +13,18 @@ public enum GameType
 
 public class GameManager : SingletonMonobehavior<GameManager>
 {
-    public GameType CurrentGameType { get; private set; } = GameType.None;
+    public Action<GameStateType> OnChangedGameState;
+
+    private GameStateType _currentGameType = GameStateType.None;
+    public GameStateType CurrentGameType 
+    {
+        get => _currentGameType;
+        private set
+        {
+            _currentGameType = value;
+            OnChangedGameState?.Invoke(_currentGameType);
+        }
+    }
     
     public MainCanvas mainCanvas;
     public LobbyCanvas lobbyCanvas;
@@ -36,7 +48,7 @@ public class GameManager : SingletonMonobehavior<GameManager>
     
     private void OnEnterLobby(EventType type, Component sender, object[] args)
     {
-        CurrentGameType = GameType.None;
+        CurrentGameType = GameStateType.None;
         
         lobbyCanvas.gameObject.SetActive(true);
         mainCanvas.gameObject.SetActive(false);
@@ -45,7 +57,7 @@ public class GameManager : SingletonMonobehavior<GameManager>
 
     private void OnLeaveLobby(EventType type, Component sender, object[] args)
     {
-        CurrentGameType = GameType.None;
+        CurrentGameType = GameStateType.None;
         
         lobbyCanvas.gameObject.SetActive(false);
         mainCanvas.gameObject.SetActive(true);
@@ -75,7 +87,7 @@ public class GameManager : SingletonMonobehavior<GameManager>
 
     private void OnStartingGame(EventType type, Component sender, object[] args)
     {        
-        CurrentGameType = GameType.Wait;
+        CurrentGameType = GameStateType.Wait;
 
         mainCanvas.gameObject.SetActive(false);
         lobbyCanvas.gameObject.SetActive(false);
@@ -109,7 +121,7 @@ public class GameManager : SingletonMonobehavior<GameManager>
 
         UIManager.Instance.ShowTimer(waitTime, () =>
         {
-            CurrentGameType = GameType.Playing;
+            CurrentGameType = GameStateType.Playing;
         });
     }
 

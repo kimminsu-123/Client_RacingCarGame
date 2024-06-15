@@ -159,6 +159,7 @@ GameObject:
   - component: {fileID: 1317139369892317616}
   - component: {fileID: 4584040128061168530}
   - component: {fileID: 2633625161696434569}
+  - component: {fileID: -2547976494165292358}
   m_Layer: 6
   m_Name: Local Car
   m_TagString: Player
@@ -274,6 +275,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fcc45bfcc9aaa944ba37c346b3cc1023, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _renderer: {fileID: 5539468108491454017}
   withoutInputDrag: 3
   dragDelta: 3
   accelerationFactor: 15
@@ -338,6 +340,21 @@ BoxCollider2D:
   serializedVersion: 2
   m_Size: {x: 0.95, y: 1.14}
   m_EdgeRadius: 0
+--- !u!114 &-2547976494165292358
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3736704811708545088}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bdbb05cbc56db8740a851525cfbc7f18, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _target: {fileID: 0}
+  _interval: 0.1
+  _isRunning: 0
 --- !u!1 &6593257287678185508
 GameObject:
   m_ObjectHideFlags: 0

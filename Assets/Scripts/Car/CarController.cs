@@ -4,12 +4,10 @@ using UnityEngine;
 public abstract class CarController : MonoBehaviour
 {
     public string PlayerId { get; private set; }
-
-    private SpriteRenderer _renderer;
+    public SpriteRenderer _renderer;
 
     private void Awake()
     {
-        _renderer = GetComponent<SpriteRenderer>();
         OnAwake();
     }
 

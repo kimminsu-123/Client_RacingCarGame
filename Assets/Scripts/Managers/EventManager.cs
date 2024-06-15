@@ -18,6 +18,8 @@ public enum EventType
     OnStartGame,
     OnEndingGame,
     OnEndGame,
+
+    OnSyncPlayer,
     
     OnFailedNetworkTransfer,
 }
