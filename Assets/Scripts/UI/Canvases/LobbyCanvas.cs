@@ -10,6 +10,7 @@ public class LobbyCanvas : MonoBehaviour
 {
     public LobbyPlayerElement[] playerElements;
     public PaletteColorButton[] paletteColorButtons;
+    public ToggleButton readyToggleButton;
     public Image carPreviewImage;
     public TMP_Text lobbyIdText;
 
@@ -31,6 +32,12 @@ public class LobbyCanvas : MonoBehaviour
         lobbyIdText.text = LobbyManager.Instance.CurrentLobby.LobbyCode;
 
         UpdatePlayerList();
+    }
+
+    private void OnDisable()
+    {
+        readyToggleButton.Value = false;
+        readyToggleButton.Interactable = true;
     }
 
     private void OnChangedColor(PaletteColorButton button)

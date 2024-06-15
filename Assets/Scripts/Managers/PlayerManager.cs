@@ -25,10 +25,11 @@ public class PlayerManager : SingletonMonobehavior<PlayerManager>
 
         if (_carControllers.ContainsKey(data.PlayerId))
         {
-            RemoteCarController car = _carControllers[data.PlayerId] as RemoteCarController;
+            CarController car = _carControllers[data.PlayerId];
             if(car != null)
             {
-                car.AddCoord(data.Position, data.Rotation);
+                car.Acceleration(data.Position);
+                car.Steering(data.Rotation.eulerAngles.z);
             }
         }
     }

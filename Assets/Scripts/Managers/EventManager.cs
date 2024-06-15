@@ -20,7 +20,8 @@ public enum EventType
     OnEndGame,
 
     OnSyncPlayer,
-    
+    OnGoalLine,
+
     OnFailedNetworkTransfer,
 }
 

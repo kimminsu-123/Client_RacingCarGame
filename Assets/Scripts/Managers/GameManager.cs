@@ -1,5 +1,7 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
+using Unity.Services.Authentication;
 using Unity.Services.Lobbies.Models;
 using UnityEngine;
 
@@ -31,21 +33,22 @@ public class GameManager : SingletonMonobehavior<GameManager>
     public GameObject inGameGroup;
 
     public float waitTime;
+    public float goalWaitTime = 5f;
 
     private void Start()
     {
         EventManager.Instance.AddListener(EventType.OnEnterLobby, OnEnterLobby);
         EventManager.Instance.AddListener(EventType.OnLeaveLobby, OnLeaveLobby);
         EventManager.Instance.AddListener(EventType.OnConnected, OnConnected);
-        EventManager.Instance.AddListener(EventType.OnDisconnected, OnDisconnected);
         EventManager.Instance.AddListener(EventType.OnStartingGame, OnStartingGame);
         EventManager.Instance.AddListener(EventType.OnStartGame, OnStartGame);
-        EventManager.Instance.AddListener(EventType.OnEndGame, OnEndingGame);
+        EventManager.Instance.AddListener(EventType.OnGoalLine, OnGoalLine);
+        EventManager.Instance.AddListener(EventType.OnEndingGame, OnEndingGame);
         EventManager.Instance.AddListener(EventType.OnEndGame, OnEndGame);
         EventManager.Instance.AddListener(EventType.OnFailedNetworkTransfer, OnFailedNetworkTransfer);
         EventManager.Instance.AddListener(EventType.OnPlayerStatusChanged, OnPlayerStatusChanged);
     }
-    
+
     private void OnEnterLobby(EventType type, Component sender, object[] args)
     {
         CurrentGameType = GameStateType.None;
@@ -66,6 +69,7 @@ public class GameManager : SingletonMonobehavior<GameManager>
 
     private void OnConnected(EventType type, Component sender, object[] args)
     {
+        Debug.Log("Connected");
         Dictionary<string, string> options = new Dictionary<string, string>()
         {
             { LobbyManager.Instance.ChangeStatusName, $"{(int)PlayerStatus.Connected}" }
@@ -73,16 +77,16 @@ public class GameManager : SingletonMonobehavior<GameManager>
 
         LobbyManager.Instance.UpdatePlayerData(options, token =>
         {
+            Debug.Log("Updated");
             if (token.Type == CallbackType.Success)
             {
                 EventManager.Instance.PostNotification(EventType.OnPlayerStatusChanged, this);
             }
+            else
+            {
+                UIManager.Instance.Alert("OnConnect", token.Msg);
+            }
         });
-    }
-
-    private void OnDisconnected(EventType type, Component sender, object[] args)
-    {
-        
     }
 
     private void OnStartingGame(EventType type, Component sender, object[] args)
@@ -115,6 +119,25 @@ public class GameManager : SingletonMonobehavior<GameManager>
         });
     }
 
+    private void OnGoalLine(EventType type, Component sender, object[] args)
+    {
+        GoalData goal = args[0] as GoalData;
+        if(goal == null)
+        {
+            return;
+        }
+
+        UIManager.Instance.ShowTimer(goalWaitTime, () =>
+        {
+            ConnectionData data = new ConnectionData();
+            data.SessionId = LobbyManager.Instance.CurrentLobby.Id;
+            data.PlayerId = PlayerManager.Instance.LocalPlayer.Id;
+            NetworkManager.Instance.SendEndGame(data);
+
+            EventManager.Instance.PostNotification(EventType.OnEndingGame, this);
+        });
+    }
+
     private void OnStartGame(EventType type, Component sender, object[] args)
     {
         UIManager.Instance.HideLoading();
@@ -127,11 +150,26 @@ public class GameManager : SingletonMonobehavior<GameManager>
 
     private void OnEndingGame(EventType type, Component sender, object[] args)
     {
-    }
+        LobbyManager.Instance.UpdateLobbyData(null, null, true);
 
+        Dictionary<string, string> options = new Dictionary<string, string>()
+        {
+            { LobbyManager.Instance.ChangeStatusName, $"{(int)PlayerStatus.UnReady}" }
+        };
+        LobbyManager.Instance.UpdatePlayerData(options, null);
+    }
+    
     private void OnEndGame(EventType type, Component sender, object[] args)
     {
-        OnEnterLobby(type, sender, args);
+        CurrentGameType = GameStateType.EndPlay;
+
+        ConnectionData data = args[0] as ConnectionData;
+        if(data == null)
+        {
+            return;
+        }
+
+        UIManager.Instance.ShowWinner(data.PlayerId);
     }
     
     private void OnFailedNetworkTransfer(EventType type, Component sender, object[] args)
@@ -143,6 +181,7 @@ public class GameManager : SingletonMonobehavior<GameManager>
 
     private void OnPlayerStatusChanged(EventType type, Component sender, object[] args)
     {
+        Debug.Log(LobbyManager.Instance.IsAllConnected);
         if (LobbyManager.Instance.IsAllConnected)
         {
             Lobby currentLobby = LobbyManager.Instance.CurrentLobby;

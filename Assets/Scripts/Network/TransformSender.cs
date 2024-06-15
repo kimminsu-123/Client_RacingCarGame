@@ -13,6 +13,7 @@ public class TransformSender : MonoBehaviour
     [SerializeField] private Transform _target;
     [SerializeField] private bool _isRunning = false;
 
+    private bool _isPause = false;
     private float _accumTime = 0f;
 
     public void SetTarget(Transform target)
@@ -24,16 +25,18 @@ public class TransformSender : MonoBehaviour
     {
         _accumTime = 0f;
         _isRunning = true;
+        _isPause = false;
     }
 
     public void Stop()
     {
         _isRunning = false;
+        _isPause = false;
     }
 
     private void Update()
     {
-        if (!_isRunning)
+        if (!_isRunning || _isPause)
         {
             return;
         }
@@ -50,7 +53,7 @@ public class TransformSender : MonoBehaviour
     {
         TransformData data = new TransformData();
         data.SessionId = LobbyManager.Instance.CurrentLobby.Id;
-        data.PlayerId = AuthenticationService.Instance.PlayerId;
+        data.PlayerId = PlayerManager.Instance.LocalPlayer.Id;
         data.Position = target.position;
         data.Rotation = target.rotation;
 
@@ -59,11 +62,11 @@ public class TransformSender : MonoBehaviour
 
     public void Pause()
     {
-        _isRunning = false;
+        _isPause = true;
     }
 
     public void Resume()
     {
-        _isRunning = true;
+        _isPause = false;
     }
 }

@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using TMPro;
+using Unity.Services.Authentication;
 using Unity.VisualScripting;
 using UnityEngine;
 
@@ -28,7 +29,7 @@ public class LocalCarController : CarController
     private Rigidbody2D _cachedRigid2d;
     private PlayerInput _cachedPlayerInput;
     private TransformSender _networkCoordSender;
-    
+    private bool _isGoal;
 
     protected override void OnAwake()
     {
@@ -138,5 +139,24 @@ public class LocalCarController : CarController
     public override void Steering(float angle)
     {
         _cachedRigid2d.MoveRotation(_rotationAngle);   
+    }
+
+    private void OnTriggerEnter2D(Collider2D other)
+    {
+        if (other.CompareTag("GoalLine") && !_isGoal)
+        {
+            _canMove = false;
+            _networkCoordSender.Stop();
+
+            GoalData data = new GoalData();
+            data.SessionId = LobbyManager.Instance.CurrentLobby.Id;
+            data.PlayerId = PlayerManager.Instance.LocalPlayer.Id;
+            data.Tick = DateTime.Now.Ticks;
+            NetworkManager.Instance.SendGoal(data);
+
+            _cachedRigid2d.drag = 10f;
+            _cachedRigid2d.angularDrag = 10f;
+            _isGoal = true;
+        }
     }
 }

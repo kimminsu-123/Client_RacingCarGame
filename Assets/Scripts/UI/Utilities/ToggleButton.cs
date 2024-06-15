@@ -32,6 +32,12 @@ public class ToggleButton : MonoBehaviour
         }
     }
 
+    public bool Interactable
+    {
+        get => _button.interactable;
+        set => _button.interactable = value;
+    }
+
     private Image _image;
     private Button _button;
 

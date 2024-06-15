@@ -86,11 +86,10 @@ public class NetworkManager : SingletonMonobehavior<NetworkManager>
     
     private void OnSyncTransform(PacketInfo info)
     {
-        TransformPacket packet = new TransformPacket(info.Buffer);
-
         switch (info.Header.ResultType)
         {
             case ResultType.Success:
+                TransformPacket packet = new TransformPacket(info.Buffer);
                 EventManager.Instance.PostNotification(EventType.OnSyncPlayer, this, packet.GetData());
                 break;
             case ResultType.Failed:
@@ -101,6 +100,16 @@ public class NetworkManager : SingletonMonobehavior<NetworkManager>
 
     private void OnGoalLine(PacketInfo info)
     {
+        switch (info.Header.ResultType)
+        {
+            case ResultType.Success:
+                GoalPacket packet = new GoalPacket(info.Buffer);
+                EventManager.Instance.PostNotification(EventType.OnGoalLine, this, packet.GetData());
+                break;
+            case ResultType.Failed:
+                EventManager.Instance.PostNotification(EventType.OnFailedNetworkTransfer, this, "failed goal line");
+                break;
+        }
     }
     
     private void OnEndGame(PacketInfo info)
@@ -108,7 +117,8 @@ public class NetworkManager : SingletonMonobehavior<NetworkManager>
         switch (info.Header.ResultType)
         {
             case ResultType.Success:
-                EventManager.Instance.PostNotification(EventType.OnEndGame, this);
+                ConnectionPacket winner = new ConnectionPacket(info.Buffer);
+                EventManager.Instance.PostNotification(EventType.OnEndGame, this, winner.GetData());
                 break;
             case ResultType.Failed:
                 EventManager.Instance.PostNotification(EventType.OnFailedNetworkTransfer, this, "failed end game");
@@ -124,7 +134,7 @@ public class NetworkManager : SingletonMonobehavior<NetworkManager>
         if (isConnected)
         {
             ConnectionData data = new ConnectionData();
-            data.PlayerId = AuthenticationService.Instance.PlayerId;
+            data.PlayerId = PlayerManager.Instance.LocalPlayer.Id;
             data.SessionId = LobbyManager.Instance.CurrentLobby.Id;
             
             DisconnectServer(data);
@@ -161,9 +171,9 @@ public class NetworkManager : SingletonMonobehavior<NetworkManager>
         _network.EnqueueSendPacket(PacketType.SyncTransform, packet);
     }
 
-    public void SendGoal(ConnectionData data)
+    public void SendGoal(GoalData data)
     {
-        ConnectionPacket packet = new ConnectionPacket(data);
+        GoalPacket packet = new GoalPacket(data);
         
         _network.EnqueueSendPacket(PacketType.GoalLine, packet);
     }

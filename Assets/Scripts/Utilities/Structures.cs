@@ -84,6 +84,7 @@ public class ConnectionPacket : IPacket<ConnectionData>
     
     public ConnectionPacket(byte[] data)
     {
+        _connectionData = new ConnectionData();
         _serializer = new ConnectionDataSerializer();
         _serializer.Deserialize(data, ref _connectionData);
     }
@@ -189,4 +190,72 @@ public class TransformData
     public string PlayerId;
     public Vector3 Position;
     public Quaternion Rotation;
+}
+
+public class GoalPacket : IPacket<GoalData>
+{
+    private class GoalDataSerializer : Serializer
+    {
+        public bool Serialize(GoalData data)
+        {
+            Clear();
+
+            bool ret = true;
+
+            ret &= Serialize(data.SessionId, ConnectionData.MaxLenSessionId);
+            ret &= Serialize(data.PlayerId, ConnectionData.MaxLenPlayerId);
+            ret &= Serialize(data.Tick);
+
+            return ret;
+        }
+
+        public bool Deserialize(byte[] bytes, ref GoalData data)
+        {
+            bool ret = true;
+
+            ret &= SetBuffer(bytes);
+            ret &= Deserialize(ref data.SessionId, ConnectionData.MaxLenSessionId);
+            ret &= Deserialize(ref data.PlayerId, ConnectionData.MaxLenPlayerId);
+            ret &= Deserialize(ref data.Tick);
+
+            return ret;
+        }
+    }
+
+    private GoalData _goalData;
+    private GoalDataSerializer _serializer;
+
+    public GoalPacket(GoalData data)
+    {
+        _serializer = new GoalDataSerializer();
+
+        _goalData = data;
+    }
+
+    public GoalPacket(byte[] data)
+    {
+        _goalData = new GoalData();
+        _serializer = new GoalDataSerializer();
+
+        _serializer.Deserialize(data, ref _goalData);
+    }
+
+    public byte[] GetBytes()
+    {
+        _serializer.Serialize(_goalData);
+
+        return _serializer.GetBuffer();
+    }
+
+    public GoalData GetData()
+    {
+        return _goalData;
+    }
+}
+
+public class GoalData
+{
+    public string SessionId;
+    public string PlayerId;
+    public long Tick;
 }

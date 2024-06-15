@@ -7,16 +7,19 @@ public class UIManager : SingletonMonobehavior<UIManager>
     private AlertCanvas _alertCanvas;
     private LoadingCanvas _loadingCanvas;
     private TimerCanvas _timerCanvas;
+    private WinnerCanvas _winnerCanvas;
 
     private void Awake()
     {
         _alertCanvas = GetComponentInChildren<AlertCanvas>(true);
         _loadingCanvas = GetComponentInChildren<LoadingCanvas>(true);
         _timerCanvas = GetComponentInChildren<TimerCanvas>(true);
+        _winnerCanvas = GetComponentInChildren<WinnerCanvas>(true);
         
         Debug.Assert(_alertCanvas, "Alert Canvas not found");
         Debug.Assert(_loadingCanvas, "Loading Canvas not found");
         Debug.Assert(_timerCanvas, "Timer Canvas not found");
+        Debug.Assert(_winnerCanvas, "Winner Canvas not found");
     }
 
     public void Alert(string title, string msg)
@@ -40,5 +43,11 @@ public class UIManager : SingletonMonobehavior<UIManager>
     {
         _timerCanvas.SetTimer(time, callback);
         _timerCanvas.gameObject.SetActive(true);
+    }
+
+    public void ShowWinner(string playerId)
+    {
+        _winnerCanvas.ShowWinner(playerId);
+        _winnerCanvas.gameObject.SetActive(true);
     }
 }

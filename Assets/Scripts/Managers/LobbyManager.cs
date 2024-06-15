@@ -60,7 +60,6 @@ public class LobbyManager : SingletonMonobehavior<LobbyManager>
     private void Start()
     {
         EventManager.Instance.AddListener(EventType.OnStartingGame, OnBeginningGame);
-        EventManager.Instance.AddListener(EventType.OnEndingGame, OnEndingGame);
         
         Application.wantsToQuit += OnApplicationWantsToQuit;
     }
@@ -73,19 +72,6 @@ public class LobbyManager : SingletonMonobehavior<LobbyManager>
         }
     }
     
-    private void OnEndingGame(EventType type, Component sender, object[] args)
-    {
-        if (CurrentLobby.HostId.Equals(PlayerManager.Instance.LocalPlayer.Id))
-        {
-            UpdateLobbyData(null, OnUnlockedLobby);
-        }
-    }
-
-    private void OnUnlockedLobby(LobbyCallbackToken token)
-    {
-        EventManager.Instance.PostNotification(EventType.OnEndGame, this);
-    }
-
     private bool OnApplicationWantsToQuit()
     {
         bool hasLobby = InLobby;
@@ -296,7 +282,7 @@ public class LobbyManager : SingletonMonobehavior<LobbyManager>
         
         try
         {
-            string playerId = AuthenticationService.Instance.PlayerId;
+            string playerId = PlayerManager.Instance.LocalPlayer.Id;
             await LobbyService.Instance.RemovePlayerAsync(CurrentLobby.Id, playerId);
 
             result.Type = CallbackType.Success;
