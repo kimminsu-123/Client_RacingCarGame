@@ -35,6 +35,8 @@ public class GameManager : SingletonMonobehavior<GameManager>
     public float waitTime;
     public float goalWaitTime = 5f;
 
+    private bool _wasGoal;
+
     private void Start()
     {
         EventManager.Instance.AddListener(EventType.OnEnterLobby, OnEnterLobby);
@@ -56,6 +58,8 @@ public class GameManager : SingletonMonobehavior<GameManager>
         lobbyCanvas.gameObject.SetActive(true);
         mainCanvas.gameObject.SetActive(false);
         inGameGroup.SetActive(false);
+
+        _wasGoal = false;
     }
 
     private void OnLeaveLobby(EventType type, Component sender, object[] args)
@@ -69,7 +73,6 @@ public class GameManager : SingletonMonobehavior<GameManager>
 
     private void OnConnected(EventType type, Component sender, object[] args)
     {
-        Debug.Log("Connected");
         Dictionary<string, string> options = new Dictionary<string, string>()
         {
             { LobbyManager.Instance.ChangeStatusName, $"{(int)PlayerStatus.Connected}" }
@@ -77,7 +80,6 @@ public class GameManager : SingletonMonobehavior<GameManager>
 
         LobbyManager.Instance.UpdatePlayerData(options, token =>
         {
-            Debug.Log("Updated");
             if (token.Type == CallbackType.Success)
             {
                 EventManager.Instance.PostNotification(EventType.OnPlayerStatusChanged, this);
@@ -126,6 +128,13 @@ public class GameManager : SingletonMonobehavior<GameManager>
         {
             return;
         }
+
+        if (_wasGoal)
+        {
+            return;
+        }
+
+        _wasGoal = true;
 
         UIManager.Instance.ShowTimer(goalWaitTime, () =>
         {
@@ -181,7 +190,6 @@ public class GameManager : SingletonMonobehavior<GameManager>
 
     private void OnPlayerStatusChanged(EventType type, Component sender, object[] args)
     {
-        Debug.Log(LobbyManager.Instance.IsAllConnected);
         if (LobbyManager.Instance.IsAllConnected)
         {
             Lobby currentLobby = LobbyManager.Instance.CurrentLobby;

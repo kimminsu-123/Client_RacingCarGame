@@ -67,7 +67,6 @@ public class LocalCarController : CarController
                 break;
             case GameStateType.EndPlay:
                 _canMove = false;
-                _networkCoordSender.Stop();
                 break;
         }
     }

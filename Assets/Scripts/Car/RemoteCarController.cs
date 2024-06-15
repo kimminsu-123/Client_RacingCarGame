@@ -12,11 +12,6 @@ public class RemoteCarController : CarController
     {
         if (_targetPos != Vector2.zero)
         {
-            if (GameManager.Instance.CurrentGameType != GameStateType.Playing)
-            {
-                return;
-            }
-
             Vector2 pos = Vector2.Lerp(transform.position, _targetPos, Time.deltaTime / TransformSender.SEND_INTERVAL);
             Quaternion rot = Quaternion.Slerp(transform.rotation, _targetRot, Time.deltaTime / TransformSender.SEND_INTERVAL);
 

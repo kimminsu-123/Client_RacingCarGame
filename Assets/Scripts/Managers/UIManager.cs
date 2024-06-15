@@ -47,7 +47,14 @@ public class UIManager : SingletonMonobehavior<UIManager>
 
     public void ShowWinner(string playerId)
     {
-        _winnerCanvas.ShowWinner(playerId);
+        string result = "You are lose :(";
+
+        if (PlayerManager.Instance.LocalPlayer.Id.Equals(playerId))
+        {
+            result = "You are winner :)";
+        }
+
+        _winnerCanvas.ShowWinner(result);
         _winnerCanvas.gameObject.SetActive(true);
     }
 }
